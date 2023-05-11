@@ -11,6 +11,7 @@ class Roomba(pygame.sprite.Sprite):
         self.speed = 5
         self.angle = 0
         self.direction = 's'
+        self.score = 0
         pygame.draw.circle(self.image, (0, 0, 0), self.rect.center, radius)
         pygame.draw.circle(self.image, (255, 255, 255), self.rect.center, 25)
         pygame.draw.circle(self.image, (0, 0, 0), self.rect.center, 15)
@@ -20,25 +21,25 @@ class Roomba(pygame.sprite.Sprite):
     def player_input(self, obstacles):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_w]:
-            print('w')
+            #print('w')
             for obstacle in obstacles:
                 if self.rect.colliderect(obstacle) & obstacle.rect.collidepoint(self.rect.midtop): return
             self.rect.y -= self.speed
             self.direction = 'w'
         if keys[pygame.K_s]:
-            print('s')
+            #print('s')
             for obstacle in obstacles:
                 if self.rect.colliderect(obstacle) & obstacle.rect.collidepoint(self.rect.midbottom): return
             self.rect.y += self.speed
             self.direction = 's'
         if keys[pygame.K_a]:
-            print('a')
+            #print('a')
             for obstacle in obstacles:
                 if self.rect.colliderect(obstacle) & obstacle.rect.collidepoint(self.rect.midleft): return
             self.rect.x -= self.speed
             self.direction = 'a'
         if keys[pygame.K_d]:
-            print('d')
+            #print('d')
             for obstacle in obstacles:
                 if self.rect.colliderect(obstacle) & obstacle.rect.collidepoint(self.rect.midright): return
             self.rect.x += self.speed
@@ -108,8 +109,6 @@ class Roomba(pygame.sprite.Sprite):
 
 
 
-
-
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self, image, rect):
         super().__init__()
@@ -148,12 +147,20 @@ radius = 29
 speed = 20
 food = []
 objects = []
-score = 0
+score = 0.0
 
 
-screen = pygame.display.set_mode((width, height))
+screen = pygame.display.set_mode((1000, height))
 pygame.display.set_caption('Roomba')
 clock = pygame.time.Clock()
+
+display_score_surface = pygame.Surface((200, height))
+display_score_surface.fill((122, 173, 172))
+
+
+
+#font_score_img = font_score_text.render('Score: ' + str(score) + '%', True, (0,0,0))
+
 
 display_surface = pygame.Surface((width, height))
 display_surface.fill((252, 172, 152))
@@ -238,6 +245,12 @@ obstacles.add(Obstacle(other_couch_arm_2_surface, other_couch_arm_2_rect))
 snacks = pygame.sprite.Group()
 
 
+def update_score(snacks):
+    eaten = 205 - len(snacks)
+    score = (eaten / 205) * 100
+    print(score)
+
+
 for i in range(20, width, 40):
     for j in range(20, height, 40):
         snack = (i, j)
@@ -261,11 +274,12 @@ while run:
             exit()
 
     # do all the stufs
+    font = pygame.font.Font(None, 36)
     screen.blit(display_surface, (0, 0))
     screen.blit(roomba_garage_surface, (0, 0))
-
-    roomba.draw(screen)
-    roomba.update(obstacles)
+    screen.blit(display_score_surface, (width, 0))
+    score_text = font.render(f'Score: {score} %', True, (255, 255, 255))
+    screen.blit(score_text, (width + 20, 20))
 
     obstacles.draw(screen)
     obstacles.update()
@@ -273,8 +287,13 @@ while run:
     snacks.draw(screen)
     snacks.update()
 
+    roomba.draw(screen)
+    roomba.update(obstacles)
+
     collision_snack_sprite()
-    score += roomba_eat_snack()
+    roomba_eat_snack()
+
+    update_score(snacks)
 
     pygame.display.update()
     clock.tick(30)
