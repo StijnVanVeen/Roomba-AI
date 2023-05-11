@@ -11,6 +11,7 @@ class Agent:
 
         self.true_pos = list(self.rect.center)
         self.path = None
+        self.next = None
         self.speed = 100
 
     def make_img(self):
@@ -43,6 +44,16 @@ class Agent:
 
             if pg.math.Vector2(dx, dy).length() < 1:
                 self.path.popleft()
+
+        if self.next and self.path is None:
+            self.move_to(self.next, dt)
+
+            dx = self.next[0] - self.true_pos[0]
+            dy = self.next[1] - self.true_pos[1]
+
+            if pg.math.Vector2(dx, dy).length() < 1:
+                self.next = None
+
 
     def set_path(self, path):
         self.path = deque(path)

@@ -24,6 +24,7 @@ class App:
 
         # Navigation Graph
         self.graph = Graph((600, 500), (50, 150))
+        self.init()
 
     def show_instructions(self):
         self.inst = not self.inst
@@ -35,9 +36,14 @@ class App:
         self.pause.set_text("Pause" if self.paused else "Resume")
         self.paused = not self.paused
 
+    def init(self):
+        self.graph.add_agent((75, 175))
+        self.graph.set_agent_target((75, 175))
+
     def run(self):
 
         while True:
+            dt = self.clock.tick(FPS) / 1000.0
             for ev in pg.event.get():
                 if ev.type == pg.QUIT:
                     pg.quit()
@@ -46,7 +52,7 @@ class App:
                 self.settings.event(ev)
                 self.instructions.event(ev)
                 self.pause.event(ev)
-                self.graph.event(ev)
+                self.graph.event(ev, dt)
 
             # Draw
             self.screen.fill(BACKGROUND)
@@ -65,6 +71,6 @@ class App:
             pg.display.flip()
 
             # Update
-            dt = self.clock.tick(FPS) / 1000.0
+
             if not self.paused:
                 self.graph.update(dt)

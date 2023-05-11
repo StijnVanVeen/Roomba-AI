@@ -9,10 +9,11 @@ class Node:
     SIZE = 50
     BORDER = 5
 
-    def __init__(self, pos, walkable):
+    def __init__(self, pos, walkable, visited):
         self.position = pos
         self.size = self.SIZE
         self.walkable = walkable
+        self.visited = visited
 
         self.rect = pg.Rect(pos[0], pos[1], self.size, self.size)
 
@@ -22,7 +23,13 @@ class Node:
         self.rect = pg.Rect(px, py, self.size, self.size)
 
     def draw(self, surface):
-        col = pg.Color('white') if self.walkable else pg.Color('black')
+        col = pg.Color('white')
+
+        if not self.walkable:
+            col = pg.Color('black')
+        if self.visited:
+            col = pg.Color('green')
+
         px, py = self.position
         sx, sy = (self.size,) * 2
         pg.draw.rect(surface, col, self.rect.inflate(-self.BORDER, -self.BORDER))
@@ -57,7 +64,7 @@ class Graph:
         for x in range(cx + 2):
             for y in range(cy - 2):
                 pos = offx + (x * Node.SIZE), offy + (y * Node.SIZE)
-                n = Node(pos, True)
+                n = Node(pos, True, False)
                 res.append(n)
         return res
 
@@ -65,6 +72,10 @@ class Graph:
 
         # Draw nodes
         for node in self.nodes:
+            for ag in self.agents:
+                if node.rect.collidepoint(ag.true_pos) and not node.visited:
+                    print('test')
+                    node.visited = True
             node.draw(surface)
 
         # Draw agents
@@ -77,7 +88,7 @@ class Graph:
             pg.draw.circle(surface, pg.Color('black'), self.target, 20)
             pg.draw.circle(surface, pg.Color('blue'), self.target, 15)
 
-    def event(self, ev):
+    def event(self, ev, dt):
 
         if ev.type == pg.MOUSEBUTTONDOWN:
             if ev.button == 1:
@@ -92,6 +103,47 @@ class Graph:
                 self.navigate()
             if ev.key == pg.K_r:
                 self.reset()
+            if ev.key == pg.K_w:
+                self.move_up()
+            if ev.key == pg.K_s:
+                self.move_down()
+            if ev.key == pg.K_a:
+                self.move_left()
+            if ev.key == pg.K_d:
+                self.move_right()
+
+    def move_down(self):
+        positions = self.neighbors(self.position)
+        for position in positions:
+            if position[1] > (self.position[1] + 25):
+                self.position = position
+                for ag in self.agents:
+                    ag.next = position
+
+
+    def move_up(self):
+        positions = self.neighbors(self.position)
+        for position in positions:
+            if position[1] < (self.position[1] + 25):
+                self.position = position
+                for ag in self.agents:
+                    ag.next = position
+
+    def move_left(self):
+        positions = self.neighbors(self.position)
+        for position in positions:
+            if position[0] < (self.position[0] + 25):
+                self.position = position
+                for ag in self.agents:
+                    ag.next = position
+
+    def move_right(self):
+        positions = self.neighbors(self.position)
+        for position in positions:
+            if position[0] > (self.position[0] + 25):
+                self.position = position
+                for ag in self.agents:
+                    ag.next = position
 
     def update(self, dt):
         for ag in self.agents:
@@ -102,6 +154,11 @@ class Graph:
             if node.rect.collidepoint(pos):
                 node.walkable = not node.walkable
 
+    def set_node_visited(self, pos):
+        for node in self.nodes:
+            if node.rect.collidepoint(pos):
+                node.visited = True
+
     def set_agent_target(self, pos):
         for node in self.nodes:
             if node.rect.collidepoint(pos):
@@ -109,6 +166,7 @@ class Graph:
                     self.target = node.rect.center
 
     def add_agent(self, pos):
+        print(pos)
         walkable = [n.position for n in self.nodes if n.walkable]
         try:
             node = [n for n in self.nodes if n.rect.collidepoint(pos)][-1]
