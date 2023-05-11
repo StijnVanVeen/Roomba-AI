@@ -5,6 +5,7 @@ from .agent import Agent
 from .astar import a_star_search, reconstruct_path
 
 
+
 class Node:
     SIZE = 50
     BORDER = 5
@@ -111,6 +112,8 @@ class Graph:
                 self.move_left()
             if ev.key == pg.K_d:
                 self.move_right()
+            if ev.key == pg.K_y:
+                self.visit_everything()
 
     def move_down(self):
         positions = self.neighbors(self.position)
@@ -195,13 +198,32 @@ class Graph:
             # Remove start position
             ag.set_path(path[2:])
 
-    def reset(self):
-        self.agents.clear()
-        self.target = None
+    # Recursive function that visits all nodes
+    def visit_everything(self):
+        # Create a list of all walkable nodes that are not visited
+        unvisited = [n for n in self.nodes if n.walkable and not n.visited]
 
-        for n in self.nodes:
+        # If there are no unvisited nodes, return
+        if not unvisited:
+            return
+
+        # Get the first unvisited node
+        next = unvisited[0]
+
+        # Set the target to the node
+        self.target = next.rect.center
+
+        # Navigate to the node
+        self.navigate()
+
+    def reset(self):
+       self.agents.clear()
+       self.target = None
+
+       for n in self.nodes:
             if not n.walkable:
                 n.walkable = True
+                n.visited = False
 
     # These two last methods must be implemented for a_star to work
     def neighbors(self, pos):
