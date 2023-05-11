@@ -5,7 +5,6 @@ from .agent import Agent
 from .astar import a_star_search, reconstruct_path
 
 
-
 class Node:
     SIZE = 50
     BORDER = 5
@@ -56,6 +55,7 @@ class Graph:
 
         self.agents = []
         self.target = None
+        self.closest_node = None
 
     def make(self):
         cx, cy = [gs // ns for ns, gs in zip((Node.SIZE, Node.SIZE), self.size)]
@@ -74,8 +74,10 @@ class Graph:
         # Draw nodes
         for node in self.nodes:
             for ag in self.agents:
-                if node.rect.collidepoint(ag.true_pos) and not node.visited:
-                    print('test')
+                dx = node.rect.center[0] - ag.true_pos[0]
+                dy = node.rect.center[1] - ag.true_pos[1]
+
+                if pg.math.Vector2(dx, dy).length() < 1 and not node.visited:
                     node.visited = True
             node.draw(surface)
 
@@ -112,8 +114,32 @@ class Graph:
                 self.move_left()
             if ev.key == pg.K_d:
                 self.move_right()
-            if ev.key == pg.K_y:
-                self.visit_everything()
+            if ev.key == pg.K_z:
+                self.something()
+
+    def something(self):
+        not_visited = []
+        for node in self.nodes:
+            if not node.visited and node.walkable:
+                not_visited.append(node)
+
+        closest_node = None
+        closest_node_distance = 500
+        for node in not_visited:
+            for ag in self.agents:
+                dx = node.position[0] + 25 - ag.true_pos[0]
+                dy = node.position[1] + 25 - ag.true_pos[1]
+                distance = pg.math.Vector2(dx, dy).length()
+
+                if distance < closest_node_distance:
+                    closest_node_distance = distance - 5
+                    closest_node = node
+
+        self.closest_node = closest_node
+        if len(not_visited) == 0:
+            self.navigate()
+        else:
+            self.navigate_closest_node()
 
     def move_down(self):
         positions = self.neighbors(self.position)
@@ -122,7 +148,6 @@ class Graph:
                 self.position = position
                 for ag in self.agents:
                     ag.next = position
-
 
     def move_up(self):
         positions = self.neighbors(self.position)
@@ -169,7 +194,6 @@ class Graph:
                     self.target = node.rect.center
 
     def add_agent(self, pos):
-        print(pos)
         walkable = [n.position for n in self.nodes if n.walkable]
         try:
             node = [n for n in self.nodes if n.rect.collidepoint(pos)][-1]
@@ -195,35 +219,46 @@ class Graph:
             except KeyError:
                 return
 
-            # Remove start position
-            ag.set_path(path[2:])
+            if len(path) < 5:
+                ag.next = path[len(path) - 1]
+            else:
+                # Remove start position
+                ag.set_path(path[2:])
 
-    # Recursive function that visits all nodes
-    def visit_everything(self):
-        # Create a list of all walkable nodes that are not visited
-        unvisited = [n for n in self.nodes if n.walkable and not n.visited]
-
-        # If there are no unvisited nodes, return
-        if not unvisited:
+    def navigate_closest_node(self):
+        # return if there is no closest node
+        if not self.closest_node:
             return
 
-        # Get the first unvisited node
-        next = unvisited[0]
+        # calculate paths for all agents
+        for ag in self.agents:
+            start = ag.rect.center
+            goal_pos = self.closest_node.position
 
-        # Set the target to the node
-        self.target = next.rect.center
+            gx = self.closest_node.position[0]
+            gy = self.closest_node.position[1]
+            goal = (gx + 25, gy + 25)
 
-        # Navigate to the node
-        self.navigate()
+            cf, cost = a_star_search(self, start, goal)
+
+            try:
+                path = reconstruct_path(cf, start, goal)
+            except KeyError:
+                return
+            print(len(path))
+            if len(path) < 5:
+                ag.next = path[len(path) - 1]
+            else:
+                # Remove start position
+                ag.set_path(path[2:])
 
     def reset(self):
-       self.agents.clear()
-       self.target = None
+        self.agents.clear()
+        self.target = None
 
-       for n in self.nodes:
+        for n in self.nodes:
             if not n.walkable:
                 n.walkable = True
-                n.visited = False
 
     # These two last methods must be implemented for a_star to work
     def neighbors(self, pos):

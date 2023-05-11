@@ -2,7 +2,7 @@ from .settings import *
 import pygame as pg
 
 
-def draw_header(surface):
+def draw_header(surface, score):
     h_size = 100
     font_name = pg.font.match_font('arial')
 
@@ -13,28 +13,12 @@ def draw_header(surface):
     text_rect.midtop = (SIZE[0] / 2, 10)
     surface.blit(tsurface, text_rect)
 
+    score_surface = tfont.render(f'Tiles Cleaned: {score}%', True, pg.Color('white'))
+    score_rect = score_surface.get_rect()
+    score_rect.midtop = (SIZE[0] / 2, 50)
+    surface.blit(score_surface, score_rect)
+
     pg.draw.line(surface, pg.Color("white"), (0, h_size), (SIZE[0], h_size), 3)
-
-
-def draw_instructions(surface):
-    surf = pg.Surface((250, 250)).convert_alpha()
-    surf.fill(BACKGROUND)
-    rect = surf.get_rect(center=(400, 300))
-
-    font_name = pg.font.match_font('arial')
-    font = pg.font.Font(font_name, 18)
-    font.set_bold(True)
-
-    for idx, line in enumerate(INSTRUCTIONS.split('\n')[1:]):
-        tsurface = font.render(line, True, pg.Color('yellow'))
-        text_rect = tsurface.get_rect()
-
-        fs = font.size(line)[1]
-        text_rect.topleft = (10, 10 + (idx * fs))
-        surf.blit(tsurface, text_rect)
-
-    surface.blit(surf, rect)
-    pg.draw.rect(surface, pg.Color('black'), rect, 5)
 
 
 def draw_settings(surface):

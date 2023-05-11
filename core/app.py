@@ -13,14 +13,16 @@ class App:
         self.clock = pg.time.Clock()
 
         # UI
-        self.instructions = Button("Instructions", (100, 30), (10, 10))
-        self.instructions.on_click(self.show_instructions)
-        self.settings = Button("Settings", (100, 30), (10, 50))
+        self.start_ai_button = Button("Start AI", (100, 30), (10, 10))
+        self.start_ai_button.on_click(self.start_ai)
+        self.settings = Button("Go Home", (100, 30), (10, 50))
         self.settings.on_click(self.show_settings)
         self.pause = Button("Pause", (100, 30), (790, 10), bg_color=pg.Color('yellow'), anchor='topright')
         self.pause.on_click(self.do_pause)
         self.sett, self.inst = False, False
+        self.stai = False
         self.paused = False
+        self.score = 0.0
 
         # Navigation Graph
         self.graph = Graph((600, 500), (50, 150))
@@ -32,9 +34,24 @@ class App:
     def show_settings(self):
         self.sett = not self.sett
 
+    def start_ai(self):
+        self.stai = True
+        print('click')
+
     def do_pause(self):
         self.pause.set_text("Pause" if self.paused else "Resume")
         self.paused = not self.paused
+
+    def calculate_score(self):
+        visited = []
+        total = []
+        for node in self.graph.nodes:
+            if node.walkable:
+                total.append(node)
+        for node in self.graph.nodes:
+            if node.visited:
+                visited.append(node)
+        self.score = round((len(visited) / len(total)) * 100, 2)
 
     def init(self):
         self.graph.add_agent((75, 175))
@@ -50,23 +67,25 @@ class App:
                     sys.exit()
 
                 self.settings.event(ev)
-                self.instructions.event(ev)
+                self.start_ai_button.event(ev)
                 self.pause.event(ev)
                 self.graph.event(ev, dt)
 
             # Draw
             self.screen.fill(BACKGROUND)
 
-            draw_header(self.screen)
+            draw_header(self.screen, self.score)
             self.graph.draw(self.screen)
 
-            self.instructions.draw(self.screen)
+            self.start_ai_button.draw(self.screen)
             self.settings.draw(self.screen)
             self.pause.draw(self.screen)
-            if self.inst:
-                draw_instructions(self.screen)
+            self.calculate_score()
+
             if self.sett:
                 draw_settings(self.screen)
+            if self.stai:
+                self.graph.something()
 
             pg.display.flip()
 

@@ -1,7 +1,7 @@
 from collections import deque
 import pygame as pg
 
-AGENT_SIZE = 35, 35
+AGENT_SIZE = 40, 40
 TRANSPARENT = 0, 0, 0, 0
 
 class Agent:
@@ -20,7 +20,9 @@ class Agent:
         rect = img.get_rect()
 
         pg.draw.ellipse(img, pg.Color('black'), rect.inflate(-1, -1))
-        pg.draw.ellipse(img, pg.Color('tomato'), rect.inflate(-10, -10))
+        pg.draw.ellipse(img, pg.Color('white'), rect.inflate(-10, -10))
+        pg.draw.ellipse(img, pg.Color('black'), rect.inflate(-20, -20))
+
 
         return img
 
@@ -31,6 +33,8 @@ class Agent:
         if self.path:
             for p in self.path:
                 pg.draw.circle(surface, pg.Color('red'), p, 5)
+        if self.next:
+            pg.draw.circle(surface, pg.Color('red'), self.next, 5)
 
     def update(self, dt):
 
@@ -43,7 +47,7 @@ class Agent:
             dy = current[1] - self.true_pos[1]
 
             if pg.math.Vector2(dx, dy).length() < 1:
-                self.path.popleft()
+                self.path = None
 
         if self.next and self.path is None:
             self.move_to(self.next, dt)
@@ -53,7 +57,6 @@ class Agent:
 
             if pg.math.Vector2(dx, dy).length() < 1:
                 self.next = None
-
 
     def set_path(self, path):
         self.path = deque(path)
