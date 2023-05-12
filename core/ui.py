@@ -6,7 +6,7 @@ def draw_header(surface, score):
     h_size = 100
     font_name = pg.font.match_font('arial')
 
-    # title font
+    # Title font
     tfont = pg.font.Font(font_name, 40)
     tsurface = tfont.render(CAPTION, True, pg.Color('white'))
     text_rect = tsurface.get_rect()

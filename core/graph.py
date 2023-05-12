@@ -106,17 +106,18 @@ class Graph:
                 self.navigate()
             if ev.key == pg.K_r:
                 self.reset()
-            if ev.key == pg.K_w:
+            if ev.key == pg.K_w or ev.key == pg.K_UP:
                 self.move_up()
-            if ev.key == pg.K_s:
+            if ev.key == pg.K_s or ev.key == pg.K_DOWN:
                 self.move_down()
-            if ev.key == pg.K_a:
+            if ev.key == pg.K_a or ev.key == pg.K_LEFT:
                 self.move_left()
-            if ev.key == pg.K_d:
+            if ev.key == pg.K_d or ev.key == pg.K_RIGHT:
                 self.move_right()
             if ev.key == pg.K_z:
                 self.something()
 
+    # TODO: Update name
     def something(self):
         not_visited = []
         for node in self.nodes:
@@ -251,6 +252,9 @@ class Graph:
             else:
                 # Remove start position
                 ag.set_path(path[2:])
+
+        # Call this function again
+        self.visit_everything()
 
     def reset(self):
         self.agents.clear()
