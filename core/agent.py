@@ -12,6 +12,7 @@ class Agent:
         self.true_pos = list(self.rect.center)
         self.path = None
         self.next = None
+        self.closest_node = None
         self.speed = 100
 
     def make_img(self):

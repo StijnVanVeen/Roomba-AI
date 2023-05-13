@@ -30,8 +30,6 @@ class Node:
         if self.visited:
             col = pg.Color('green')
 
-        px, py = self.position
-        sx, sy = (self.size,) * 2
         pg.draw.rect(surface, col, self.rect.inflate(-self.BORDER, -self.BORDER))
 
     def get_neighbours(self):
@@ -91,7 +89,7 @@ class Graph:
             pg.draw.circle(surface, pg.Color('black'), self.target, 20)
             pg.draw.circle(surface, pg.Color('blue'), self.target, 15)
 
-    def event(self, ev, dt):
+    def event(self, ev):
 
         if ev.type == pg.MOUSEBUTTONDOWN:
             if ev.button == 1:
@@ -102,10 +100,6 @@ class Graph:
                 self.set_agent_target(ev.pos)
 
         if ev.type == pg.KEYDOWN:
-            if ev.key == pg.K_SPACE:
-                self.navigate()
-            if ev.key == pg.K_r:
-                self.reset()
             if ev.key == pg.K_w or ev.key == pg.K_UP:
                 self.move_up()
             if ev.key == pg.K_s or ev.key == pg.K_DOWN:
@@ -114,8 +108,6 @@ class Graph:
                 self.move_left()
             if ev.key == pg.K_d or ev.key == pg.K_RIGHT:
                 self.move_right()
-            if ev.key == pg.K_z:
-                self.something()
 
     # TODO: Update name
     def something(self):
@@ -125,7 +117,7 @@ class Graph:
                 not_visited.append(node)
 
         closest_node = None
-        closest_node_distance = 500
+        closest_node_distance = 2000
         for node in not_visited:
             for ag in self.agents:
                 dx = node.position[0] + 25 - ag.true_pos[0]
@@ -134,9 +126,9 @@ class Graph:
 
                 if distance < closest_node_distance:
                     closest_node_distance = distance - 5
-                    closest_node = node
+                    ag.closest_node = node
 
-        self.closest_node = closest_node
+        #self.closest_node = closest_node
         if len(not_visited) == 0:
             self.navigate()
         else:
@@ -182,6 +174,9 @@ class Graph:
         for node in self.nodes:
             if node.rect.collidepoint(pos):
                 node.walkable = not node.walkable
+                if node.visited:
+                    node.visited = not node.visited
+                    node.walkable = not node.walkable
 
     def set_node_visited(self, pos):
         for node in self.nodes:
@@ -227,17 +222,15 @@ class Graph:
                 ag.set_path(path[2:])
 
     def navigate_closest_node(self):
-        # return if there is no closest node
-        if not self.closest_node:
-            return
-
         # calculate paths for all agents
         for ag in self.agents:
+            if not ag.closest_node:
+                return
             start = ag.rect.center
-            goal_pos = self.closest_node.position
+            goal_pos = ag.closest_node.position
 
-            gx = self.closest_node.position[0]
-            gy = self.closest_node.position[1]
+            gx = ag.closest_node.position[0]
+            gy = ag.closest_node.position[1]
             goal = (gx + 25, gy + 25)
 
             cf, cost = a_star_search(self, start, goal)
@@ -246,15 +239,12 @@ class Graph:
                 path = reconstruct_path(cf, start, goal)
             except KeyError:
                 return
-            print(len(path))
+
             if len(path) < 5:
                 ag.next = path[len(path) - 1]
             else:
                 # Remove start position
                 ag.set_path(path[2:])
-
-        # Call this function again
-        self.visit_everything()
 
     def reset(self):
         self.agents.clear()
@@ -263,6 +253,8 @@ class Graph:
         for n in self.nodes:
             if not n.walkable:
                 n.walkable = True
+            if n.visited:
+                n.visited = False
 
     # These two last methods must be implemented for a_star to work
     def neighbors(self, pos):
