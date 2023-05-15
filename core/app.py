@@ -69,6 +69,7 @@ class App:
         self.stai = False
         self.going_home = False
         self.stopped = False
+        self.timer.stop()
         self.time_elapsed = 0.0
         self.timer_on = False
         self.init()
