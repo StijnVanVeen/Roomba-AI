@@ -2,7 +2,7 @@ from .settings import *
 import pygame as pg
 
 
-def draw_header(surface, score):
+def draw_header(surface, score, time_elapsed):
     h_size = 100
     font_name = pg.font.match_font('arial')
 
@@ -17,6 +17,11 @@ def draw_header(surface, score):
     score_rect = score_surface.get_rect()
     score_rect.midtop = (SIZE[0] / 2, 50)
     surface.blit(score_surface, score_rect)
+
+    time_surface = tfont.render(f'{time_elapsed} seconds', True, pg.Color('white'))
+    time_rect = time_surface.get_rect()
+    time_rect.midtop = (SIZE[0] / 2, 100)
+    surface.blit(time_surface, time_rect)
 
     pg.draw.line(surface, pg.Color("white"), (0, h_size), (SIZE[0], h_size), 3)
 

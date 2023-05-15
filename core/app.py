@@ -3,6 +3,7 @@ import pygame as pg
 from .settings import *
 from .ui import *
 from .graph import Graph
+from .timer import Timer
 
 
 class App:
@@ -28,6 +29,9 @@ class App:
         self.stopped = False
         self.paused = False
         self.score = 0.0
+        self.timer_on = False
+        self.timer = Timer()
+        self.time_elapsed = 0.0
 
         # Navigation Graph
         self.graph = Graph((600, 500), (50, 150))
@@ -51,10 +55,12 @@ class App:
     def do_pause(self):
         if not self.paused:
             print('pausing...')
-            self.pause.set_text("Pause")
+            self.pause.set_text("Resume")
+            self.timer.pause()
         else:
             print('resuming...')
-            self.pause.set_text("Resume")
+            self.pause.set_text("Pause")
+            self.timer.unpause()
         self.paused = not self.paused
 
     def do_reset(self):
@@ -63,6 +69,8 @@ class App:
         self.stai = False
         self.going_home = False
         self.stopped = False
+        self.time_elapsed = 0.0
+        self.timer_on = False
         self.init()
 
     def calculate_score(self):
@@ -75,6 +83,8 @@ class App:
             if node.visited:
                 visited.append(node)
         self.score = round((len(visited) / len(total)) * 100, 2)
+        if self.score == 100.0:
+            self.going_home = True
 
     def check_if_home(self):
         for ag in self.graph.agents:
@@ -86,10 +96,22 @@ class App:
             if distance < 5:
                 print('stopping...')
                 self.stopped = True
+                self.timer_on = False
+                self.time_elapsed = round(self.timer.stop(), 2)
 
     def init(self):
         self.graph.add_agent((75, 175))
         self.graph.set_agent_target((75, 175))
+
+    def event(self, ev):
+        if ev.type == pg.KEYDOWN:
+            if not self.timer_on:
+                self.timer_on = True
+                self.timer.start()
+        if self.stai:
+            if not self.timer_on:
+                self.timer_on = True
+                self.timer.start()
 
     def run(self):
 
@@ -105,11 +127,12 @@ class App:
                 self.pause.event(ev)
                 self.graph.event(ev)
                 self.reset.event(ev)
+                self.event(ev)
 
             # Draw
             self.screen.fill(BACKGROUND)
 
-            draw_header(self.screen, self.score)
+            draw_header(self.screen, self.score, self.time_elapsed)
             self.graph.draw(self.screen)
 
             self.start_ai_button.draw(self.screen)
@@ -121,7 +144,8 @@ class App:
             if self.sett:
                 draw_settings(self.screen)
             if self.stai and not self.stopped:
-                self.graph.full_coverage()
+                self.graph.something()
+
             if self.going_home and not self.stopped:
                 self.graph.navigate()
                 self.check_if_home()
