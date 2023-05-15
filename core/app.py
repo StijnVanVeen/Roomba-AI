@@ -121,7 +121,7 @@ class App:
             if self.sett:
                 draw_settings(self.screen)
             if self.stai and not self.stopped:
-                self.graph.something()
+                self.graph.full_coverage()
             if self.going_home and not self.stopped:
                 self.graph.navigate()
                 self.check_if_home()

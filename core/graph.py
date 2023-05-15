@@ -35,7 +35,6 @@ class Node:
     def get_neighbours(self):
         refx, refy = self.rect.center
         four_dirs = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-        eight_dirs = list(perm([0, 1, -1], 2)) + [(1, 1), (-1, -1)]
 
         neighs = []
         for d in four_dirs:
@@ -68,7 +67,6 @@ class Graph:
         return res
 
     def draw(self, surface):
-
         # Draw nodes
         for node in self.nodes:
             for ag in self.agents:
@@ -90,7 +88,6 @@ class Graph:
             pg.draw.circle(surface, pg.Color('blue'), self.target, 15)
 
     def event(self, ev):
-
         if ev.type == pg.MOUSEBUTTONDOWN:
             if ev.button == 1:
                 self.add_agent(ev.pos)
@@ -109,8 +106,7 @@ class Graph:
             if ev.key == pg.K_d or ev.key == pg.K_RIGHT:
                 self.move_right()
 
-    # TODO: Update name
-    def something(self):
+    def full_coverage(self):
         not_visited = []
         for node in self.nodes:
             if not node.visited and node.walkable:
